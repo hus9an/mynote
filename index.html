@@ -12,6 +12,23 @@
       --dark: #1a1a2e;
       --darker: #16213e;
       --darkest: #0f3460;
+      --text-color: #fff;
+      --bg-main: linear-gradient(135deg, var(--dark) 0%, var(--darker) 50%, var(--darkest) 100%);
+      --bg-secondary: var(--darker);
+      --bg-tertiary: #162447;
+    }
+
+    html.light-mode {
+      --primary: #2d8659;
+      --secondary: #0066cc;
+      --accent: #dd1e42;
+      --dark: #f8f9fa;
+      --darker: #e9ecef;
+      --darkest: #dee2e6;
+      --text-color: #333;
+      --bg-main: linear-gradient(135deg, #ffffff 0%, #f8f9fa 50%, #e9ecef 100%);
+      --bg-secondary: #e9ecef;
+      --bg-tertiary: #dee2e6;
     }
     
     * {
@@ -22,12 +39,13 @@
     }
 
     body {
-      background: linear-gradient(135deg, var(--dark) 0%, var(--darker) 50%, var(--darkest) 100%);
+      background: var(--bg-main);
       min-height: 100vh;
       padding: 10px 5px;
-      color: #fff;
+      color: var(--text-color);
       overflow-x: hidden;
       padding-bottom: 80px;
+      transition: background 0.3s ease, color 0.3s ease;
     }
 
     .container {
@@ -43,13 +61,41 @@
 
     .header {
       background: linear-gradient(135deg, #162447 0%, var(--dark) 100%);
-      color: #fff;
+      color: var(--text-color);
       padding: 16px 15px;
       text-align: center;
       border-bottom: 3px solid var(--primary);
       position: sticky;
       top: 0;
       z-index: 100;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .header-content {
+      flex: 1;
+      text-align: center;
+    }
+
+    .theme-toggle {
+      background: var(--primary);
+      color: var(--dark);
+      border: none;
+      width: 45px;
+      height: 45px;
+      border-radius: 50%;
+      font-size: 1.3em;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .theme-toggle:hover {
+      transform: scale(1.1);
+      box-shadow: 0 2px 10px rgba(78, 204, 163, 0.4);
     }
 
     .header h1 {
@@ -139,7 +185,7 @@
     }
 
     .task-item {
-      background: var(--darkest);
+      background: var(--bg-secondary);
       border-radius: 10px;
       padding: 10px;
       display: flex;
@@ -182,6 +228,82 @@
     .task-checkbox.checked {
       background: var(--primary);
       border-color: var(--primary);
+    }
+
+    .task-checkbox.checked::after {
+      content: '✓';
+      color: var(--dark);
+      font-weight: bold;
+      font-size: 0.85em;
+    }
+
+    .task-content {
+      flex: 1;
+      width: 100%;
+    }
+
+    .task-time-input {
+      display: flex;
+      gap: 5px;
+      margin-bottom: 8px;
+      align-items: center;
+      font-size: 0.85em;
+      flex-wrap: wrap;
+    }
+
+    .task-time-input input {
+      width: 50px;
+      padding: 5px;
+      background: var(--darkest);
+      border: 1px solid var(--primary);
+      border-radius: 5px;
+      color: var(--text-color);
+      text-align: center;
+    }
+
+    .task-time-input label {
+      color: var(--text-color);
+      opacity: 0.8;
+      font-size: 0.9em;
+    }
+
+    .alarm-indicator {
+      display: inline-block;
+      width: 8px;
+      height: 8px;
+      background: var(--accent);
+      border-radius: 50%;
+      margin-left: 5px;
+      animation: pulse 1.5s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.4; }
+    }
+
+    .task-title {
+      font-size: 0.95em;
+      font-weight: 600;
+      color: var(--text-color);
+      margin-bottom: 5px;
+      word-wrap: break-word;
+      line-height: 1.4;
+    }
+
+    .task-notes {
+      margin-top: 6px;
+      padding: 7px;
+      background: var(--dark);
+      border-radius: 6px;
+      border: 1px solid var(--primary);
+      font-size: 0.82em;
+      color: var(--text-color);
+      min-height: 30px;
+      resize: vertical;
+      width: 100%;
+      line-height: 1.4;
+    }
       transform: rotate(360deg);
     }
 
@@ -397,8 +519,11 @@
 <body>
   <div class="container">
     <div class="header">
-      <h1>مخططي 📅</h1>
-      <div class="date-display" id="currentDate"></div>
+      <div class="header-content">
+        <h1>مخططي 📅</h1>
+        <div class="date-display" id="currentDate"></div>
+      </div>
+      <button class="theme-toggle" id="themeToggle" onclick="toggleTheme()" title="تبديل المود">🌙</button>
     </div>
 
     <div class="main-content">
@@ -512,6 +637,35 @@
   <div class="toast" id="toast">تم الحفظ بنجاح!</div>
 
   <script>
+    // تهيئة الموضوع
+    const THEME_KEY = 'app_theme';
+    
+    function toggleTheme() {
+      const html = document.documentElement;
+      const isDark = !html.classList.contains('light-mode');
+      
+      if (isDark) {
+        html.classList.add('light-mode');
+        localStorage.setItem(THEME_KEY, 'light');
+        document.getElementById('themeToggle').textContent = '☀️';
+      } else {
+        html.classList.remove('light-mode');
+        localStorage.setItem(THEME_KEY, 'dark');
+        document.getElementById('themeToggle').textContent = '🌙';
+      }
+    }
+
+    // تحميل الموضوع المحفوظ
+    function loadTheme() {
+      const savedTheme = localStorage.getItem(THEME_KEY);
+      if (savedTheme === 'light') {
+        document.documentElement.classList.add('light-mode');
+        document.getElementById('themeToggle').textContent = '☀️';
+      } else {
+        document.getElementById('themeToggle').textContent = '🌙';
+      }
+    }
+
     // تهيئة التاريخ
     function updateDate() {
       const now = new Date();
@@ -525,7 +679,7 @@
     }
 
     // نظام التخزين
-    const STORAGE_KEY = 'weekly_tasks_v2';
+    const STORAGE_KEY = 'weekly_tasks_v3';
     const NOTES_KEY = 'general_notes_v2';
     
     // تحميل البيانات
@@ -538,7 +692,7 @@
           if (container) {
             container.innerHTML = '';
             tasks[day].forEach(task => {
-              addTaskToDOM(day, task.id, task.name, task.notes, task.completed);
+              addTaskToDOM(day, task.id, task.name, task.notes, task.completed, task.hour, task.minute);
             });
           }
         });
@@ -551,6 +705,7 @@
       }
       
       updateStats();
+      checkAlarms();
     }
 
     // حفظ البيانات
@@ -574,8 +729,12 @@
           const name = item.querySelector('.task-title').textContent;
           const notes = item.querySelector('.task-notes').value || '';
           const completed = item.classList.contains('completed');
+          const hourInput = item.querySelector('.task-hour');
+          const minuteInput = item.querySelector('.task-minute');
+          const hour = hourInput ? hourInput.value : '';
+          const minute = minuteInput ? minuteInput.value : '';
           
-          tasks[day].push({ id, name, notes, completed });
+          tasks[day].push({ id, name, notes, completed, hour, minute });
         });
       });
       
@@ -588,15 +747,24 @@
     }
 
     // إضافة مهمة للواجهة
-    function addTaskToDOM(day, id, name, notes = '', completed = false) {
+    function addTaskToDOM(day, id, name, notes = '', completed = false, hour = '', minute = '') {
       const container = document.getElementById(`${day}Tasks`);
       const taskItem = document.createElement('div');
       taskItem.className = `task-item ${completed ? 'completed' : ''}`;
       taskItem.id = id;
+      
+      const hasAlarmTime = hour !== '' && minute !== '';
+      
       taskItem.innerHTML = `
         <div class="task-checkbox ${completed ? 'checked' : ''}" onclick="toggleCheck('${id}')"></div>
         <div class="task-content">
-          <div class="task-title">${escapeHtml(name)}</div>
+          <div class="task-title">${escapeHtml(name)}${hasAlarmTime ? '<span class="alarm-indicator"></span>' : ''}</div>
+          <div class="task-time-input">
+            <label>⏰ الساعة:</label>
+            <input type="number" class="task-hour" min="0" max="23" placeholder="00" value="${escapeHtml(hour)}" onchange="saveTasks()">
+            <label>:</label>
+            <input type="number" class="task-minute" min="0" max="59" placeholder="00" value="${escapeHtml(minute)}" onchange="saveTasks()">
+          </div>
           <textarea class="task-notes" placeholder="أضف ملاحظاتك هنا...">${escapeHtml(notes)}</textarea>
         </div>
       `;
@@ -656,7 +824,7 @@
       }
 
       const taskId = `task_${Date.now()}`;
-      addTaskToDOM(day, taskId, taskName, taskNotes, false);
+      addTaskToDOM(day, taskId, taskName, taskNotes, false, '', '');
       closeModal();
       saveTasks();
       
@@ -679,6 +847,63 @@
       updateStats();
     }
 
+    // التحقق من المنبهات
+    function checkAlarms() {
+      const now = new Date();
+      const currentHour = String(now.getHours()).padStart(2, '0');
+      const currentMinute = String(now.getMinutes()).padStart(2, '0');
+      const currentTime = `${currentHour}${currentMinute}`;
+      
+      const allTasks = document.querySelectorAll('.task-item:not(.completed)');
+      allTasks.forEach(task => {
+        const hourInput = task.querySelector('.task-hour');
+        const minuteInput = task.querySelector('.task-minute');
+        
+        if (hourInput && minuteInput) {
+          const hour = hourInput.value;
+          const minute = minuteInput.value;
+          
+          if (hour && minute) {
+            const taskTime = `${String(hour).padStart(2, '0')}${String(minute).padStart(2, '0')}`;
+            
+            if (taskTime === currentTime) {
+              const taskName = task.querySelector('.task-title').textContent.replace(/⏰|🔔|🔴/g, '').trim();
+              playAlarmSound();
+              showAlarmNotification(taskName);
+            }
+          }
+        }
+      });
+    }
+
+    // تشغيل صوت المنبه
+    function playAlarmSound() {
+      const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+      const oscillator = audioContext.createOscillator();
+      const gainNode = audioContext.createGain();
+      
+      oscillator.connect(gainNode);
+      gainNode.connect(audioContext.destination);
+      
+      oscillator.frequency.value = 800;
+      oscillator.type = 'sine';
+      gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+      gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5);
+      
+      oscillator.start(audioContext.currentTime);
+      oscillator.stop(audioContext.currentTime + 0.5);
+    }
+
+    // عرض إشعار المنبه
+    function showAlarmNotification(taskName) {
+      const toast = document.getElementById('toast');
+      toast.innerHTML = `🔔 حان وقت: ${escapeHtml(taskName)}`;
+      toast.classList.add('show');
+      setTimeout(() => {
+        toast.classList.remove('show');
+      }, 4000);
+    }
+
     // تحديث الإحصائيات
     function updateStats() {
       const allTasks = document.querySelectorAll('.task-item');
@@ -698,6 +923,7 @@
     // عرض رسالة تأكيد
     function showToast() {
       const toast = document.getElementById('toast');
+      toast.innerHTML = 'تم الحفظ بنجاح! ✅';
       toast.classList.add('show');
       setTimeout(() => {
         toast.classList.remove('show');
@@ -730,6 +956,7 @@
 
     // تهيئة الصفحة
     document.addEventListener('DOMContentLoaded', () => {
+      loadTheme();
       updateDate();
       loadTasks();
       
@@ -740,10 +967,13 @@
       const saved = localStorage.getItem(STORAGE_KEY);
       if (!saved) {
         setTimeout(() => {
-          addTaskToDOM('sunday', 'welcome_task', '🎯 جرب إضافة مهامك الأولى!', 'اضغط على زر ➕ لإضافة مهامك الأسبوعية', false);
+          addTaskToDOM('sunday', 'welcome_task', '🎯 جرب إضافة مهامك الأولى!', 'اضغط على زر ➕ لإضافة مهامك الأسبوعية', false, '', '');
           saveTasks();
         }, 300);
       }
+      
+      // التحقق من المنبهات كل دقيقة
+      setInterval(checkAlarms, 60000);
     });
   </script>
 </body>
