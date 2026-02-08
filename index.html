@@ -1,0 +1,750 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>مخططي - جدول المهام الأسبوعي</title>
+  <style>
+    :root {
+      --primary: #4ecca3;
+      --secondary: #4cc9f0;
+      --accent: #e94560;
+      --dark: #1a1a2e;
+      --darker: #16213e;
+      --darkest: #0f3460;
+    }
+    
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    body {
+      background: linear-gradient(135deg, var(--dark) 0%, var(--darker) 50%, var(--darkest) 100%);
+      min-height: 100vh;
+      padding: 10px 5px;
+      color: #fff;
+      overflow-x: hidden;
+      padding-bottom: 80px;
+    }
+
+    .container {
+      background: var(--dark);
+      border-radius: 16px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+      width: 100%;
+      overflow: hidden;
+      border: 2px solid var(--primary);
+      margin: 0 auto;
+      max-width: 100%;
+    }
+
+    .header {
+      background: linear-gradient(135deg, #162447 0%, var(--dark) 100%);
+      color: #fff;
+      padding: 16px 15px;
+      text-align: center;
+      border-bottom: 3px solid var(--primary);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .header h1 {
+      font-size: 1.8em;
+      margin-bottom: 6px;
+      font-weight: 300;
+      background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 50%, #4361ee 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      line-height: 1.3;
+    }
+
+    .date-display {
+      font-size: 0.95em;
+      opacity: 0.9;
+      margin-top: 4px;
+      color: var(--accent);
+      font-weight: 500;
+    }
+
+    .main-content {
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .day-section {
+      background: var(--darker);
+      border-radius: 12px;
+      padding: 14px;
+      border: 2px solid var(--primary);
+      transition: all 0.3s ease;
+      box-shadow: 0 3px 10px rgba(0, 0, 0, 0.3);
+    }
+
+    .day-section:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(78, 204, 163, 0.3);
+      border-color: var(--secondary);
+    }
+
+    .day-title {
+      font-size: 1.3em;
+      font-weight: 700;
+      margin-bottom: 10px;
+      padding-bottom: 6px;
+      border-bottom: 2px solid var(--primary);
+      color: var(--primary);
+      text-align: center;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+    }
+
+    .day-title.sunday { color: var(--accent); border-bottom-color: var(--accent); }
+    .day-title.monday { color: var(--secondary); border-bottom-color: var(--secondary); }
+    .day-title.tuesday { color: #4361ee; border-bottom-color: #4361ee; }
+    .day-title.wednesday { color: #3a0ca3; border-bottom-color: #3a0ca3; }
+    .day-title.thursday { color: #480ca8; border-bottom-color: #480ca8; }
+    .day-title.friday { color: var(--secondary); border-bottom-color: var(--secondary); }
+    .day-title.saturday { color: #f72585; border-bottom-color: #f72585; }
+
+    .tasks-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      max-height: 280px;
+      overflow-y: auto;
+      padding-right: 3px;
+    }
+
+    .tasks-list::-webkit-scrollbar {
+      width: 4px;
+    }
+
+    .tasks-list::-webkit-scrollbar-track {
+      background: var(--darkest);
+      border-radius: 10px;
+    }
+
+    .tasks-list::-webkit-scrollbar-thumb {
+      background: var(--primary);
+      border-radius: 10px;
+    }
+
+    .task-item {
+      background: var(--darkest);
+      border-radius: 10px;
+      padding: 10px;
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      transition: all 0.3s ease;
+      border-left: 3px solid var(--primary);
+      animation: fadeIn 0.3s ease;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .task-item:hover {
+      transform: translateX(2px);
+      box-shadow: 0 2px 8px rgba(78, 204, 163, 0.3);
+    }
+
+    .task-item.completed {
+      border-left-color: var(--secondary);
+      opacity: 0.85;
+    }
+
+    .task-checkbox {
+      width: 20px;
+      height: 20px;
+      border: 2px solid var(--primary);
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      flex-shrink: 0;
+      margin-top: 2px;
+    }
+
+    .task-checkbox.checked {
+      background: var(--primary);
+      border-color: var(--primary);
+      transform: rotate(360deg);
+    }
+
+    .task-checkbox.checked::after {
+      content: '✓';
+      color: var(--dark);
+      font-weight: bold;
+      font-size: 13px;
+    }
+
+    .task-content {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .task-title {
+      font-size: 0.95em;
+      font-weight: 600;
+      color: #fff;
+      margin-bottom: 5px;
+      word-wrap: break-word;
+      line-height: 1.4;
+    }
+
+    .task-notes {
+      margin-top: 6px;
+      padding: 7px;
+      background: var(--dark);
+      border-radius: 6px;
+      border: 1px solid var(--primary);
+      font-size: 0.82em;
+      color: #e9ecef;
+      min-height: 30px;
+      resize: vertical;
+      width: 100%;
+      line-height: 1.4;
+      border-radius: 5px;
+    }
+
+    .add-task-btn {
+      background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+      color: var(--dark);
+      border: none;
+      padding: 9px 15px;
+      border-radius: 8px;
+      font-size: 0.88em;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      margin-top: 8px;
+      width: 100%;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      box-shadow: 0 3px 8px rgba(78, 204, 163, 0.3);
+    }
+
+    .add-task-btn:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(78, 204, 163, 0.4);
+    }
+
+    .stats-section {
+      background: #162447;
+      border-radius: 12px;
+      padding: 14px;
+      border: 2px solid var(--primary);
+      margin-top: 8px;
+    }
+
+    .stats-title {
+      font-size: 1.25em;
+      color: var(--primary);
+      margin-bottom: 12px;
+      text-align: center;
+      font-weight: 600;
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 8px;
+    }
+
+    .stat-card {
+      background: linear-gradient(135deg, var(--dark) 0%, var(--darker) 100%);
+      padding: 10px;
+      border-radius: 8px;
+      text-align: center;
+      border: 1px solid var(--primary);
+    }
+
+    .stat-number {
+      font-size: 1.5em;
+      font-weight: bold;
+      margin-bottom: 2px;
+      background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .stat-label {
+      font-size: 0.78em;
+      color: #adb5bd;
+    }
+
+    .notes-section {
+      background: #162447;
+      border-radius: 12px;
+      padding: 14px;
+      border: 2px solid var(--primary);
+      margin-top: 8px;
+    }
+
+    .notes-title {
+      font-size: 1.25em;
+      color: var(--primary);
+      margin-bottom: 10px;
+      text-align: center;
+      font-weight: 600;
+    }
+
+    .notes-area {
+      width: 100%;
+      min-height: 100px;
+      background: var(--dark);
+      border-radius: 8px;
+      padding: 10px;
+      border: 2px solid var(--primary);
+      resize: vertical;
+      font-size: 0.92em;
+      line-height: 1.5;
+      color: #e9ecef;
+      border-radius: 6px;
+    }
+
+    .quick-add {
+      position: fixed;
+      bottom: 75px;
+      right: 15px;
+      background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+      color: var(--dark);
+      border: none;
+      width: 52px;
+      height: 52px;
+      border-radius: 50%;
+      font-size: 1.9em;
+      cursor: pointer;
+      box-shadow: 0 4px 18px rgba(78, 204, 163, 0.6);
+      z-index: 999;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.3s ease;
+      font-weight: bold;
+    }
+
+    .quick-add:hover {
+      transform: scale(1.08) rotate(45deg);
+      box-shadow: 0 5px 25px rgba(78, 204, 163, 0.8);
+    }
+
+    .toast {
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%) translateY(100px);
+      background: rgba(78, 204, 163, 0.95);
+      color: var(--dark);
+      padding: 10px 20px;
+      border-radius: 50px;
+      font-weight: 600;
+      z-index: 1000;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+      opacity: 0;
+      transition: all 0.4s ease;
+    }
+
+    .toast.show {
+      transform: translateX(-50%) translateY(0);
+      opacity: 1;
+    }
+
+    @media (min-width: 769px) {
+      .main-content {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 12px;
+      }
+      
+      .stats-section, .notes-section {
+        grid-column: span 2;
+      }
+    }
+
+    @media (min-width: 1024px) {
+      .main-content {
+        grid-template-columns: repeat(3, 1fr);
+      }
+      
+      .stats-section {
+        grid-column: span 3;
+      }
+      
+      .notes-section {
+        grid-column: span 3;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>مخططي 📅</h1>
+      <div class="date-display" id="currentDate"></div>
+    </div>
+
+    <div class="main-content">
+      <!-- الأحد -->
+      <div class="day-section">
+        <h2 class="day-title sunday">الأحد</h2>
+        <div class="tasks-list" id="sundayTasks"></div>
+        <button class="add-task-btn" onclick="openAddTaskModal('sunday')">➕ إضافة مهمة</button>
+      </div>
+
+      <!-- الاثنين -->
+      <div class="day-section">
+        <h2 class="day-title monday">الاثنين</h2>
+        <div class="tasks-list" id="mondayTasks"></div>
+        <button class="add-task-btn" onclick="openAddTaskModal('monday')">➕ إضافة مهمة</button>
+      </div>
+
+      <!-- الثلاثاء -->
+      <div class="day-section">
+        <h2 class="day-title tuesday">الثلاثاء</h2>
+        <div class="tasks-list" id="tuesdayTasks"></div>
+        <button class="add-task-btn" onclick="openAddTaskModal('tuesday')">➕ إضافة مهمة</button>
+      </div>
+
+      <!-- الأربعاء -->
+      <div class="day-section">
+        <h2 class="day-title wednesday">الأربعاء</h2>
+        <div class="tasks-list" id="wednesdayTasks"></div>
+        <button class="add-task-btn" onclick="openAddTaskModal('wednesday')">➕ إضافة مهمة</button>
+      </div>
+
+      <!-- الخميس -->
+      <div class="day-section">
+        <h2 class="day-title thursday">الخميس</h2>
+        <div class="tasks-list" id="thursdayTasks"></div>
+        <button class="add-task-btn" onclick="openAddTaskModal('thursday')">➕ إضافة مهمة</button>
+      </div>
+
+      <!-- الجمعة -->
+      <div class="day-section">
+        <h2 class="day-title friday">الجمعة</h2>
+        <div class="tasks-list" id="fridayTasks"></div>
+        <button class="add-task-btn" onclick="openAddTaskModal('friday')">➕ إضافة مهمة</button>
+      </div>
+
+      <!-- السبت -->
+      <div class="day-section">
+        <h2 class="day-title saturday">السبت</h2>
+        <div class="tasks-list" id="saturdayTasks"></div>
+        <button class="add-task-btn" onclick="openAddTaskModal('saturday')">➕ إضافة مهمة</button>
+      </div>
+
+      <!-- الإحصائيات -->
+      <div class="stats-section">
+        <h2 class="stats-title">📊 إحصائيات الأسبوع</h2>
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-number" id="totalTasks">0</div>
+            <div class="stat-label">إجمالي المهام</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-number" id="completedTasks">0</div>
+            <div class="stat-label">منجزة</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-number" id="pendingTasks">0</div>
+            <div class="stat-label">قيد الانتظار</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-number" id="completionRate">0%</div>
+            <div class="stat-label">نسبة الإنجاز</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- الملاحظات العامة -->
+      <div class="notes-section">
+        <h2 class="notes-title">📝 ملاحظاتي</h2>
+        <textarea class="notes-area" id="generalNotes" placeholder="اكتب ملاحظاتك الأسبوعية هنا..."></textarea>
+      </div>
+    </div>
+  </div>
+
+  <!-- زر الإضافة السريعة -->
+  <button class="quick-add" onclick="openAddTaskModal('quick')" title="إضافة مهمة سريعة">+</button>
+
+  <!-- نافذة الإضافة -->
+  <div class="modal" id="addTaskModal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.9);z-index:1000;justify-content:center;align-items:center;padding:20px;">
+    <div style="background:#1a1a2e;padding:20px;border-radius:15px;width:100%;max-width:400px;border:3px solid #4ecca3;">
+      <h2 style="font-size:1.4em;color:#4ecca3;margin-bottom:15px;text-align:center;font-weight:600;">➕ إضافة مهمة جديدة</h2>
+      <input type="hidden" id="selectedDay">
+      <select class="modal-input" id="daySelect" style="width:100%;padding:10px;margin-bottom:12px;background:#16213e;border:2px solid #4ecca3;border-radius:8px;color:#fff;font-size:1em;display:none;">
+        <option value="sunday">الأحد</option>
+        <option value="monday">الاثنين</option>
+        <option value="tuesday">الثلاثاء</option>
+        <option value="wednesday">الأربعاء</option>
+        <option value="thursday">الخميس</option>
+        <option value="friday">الجمعة</option>
+        <option value="saturday">السبت</option>
+      </select>
+      <input type="text" id="taskName" placeholder="اسم المهمة" style="width:100%;padding:10px;margin-bottom:12px;background:#16213e;border:2px solid #4ecca3;border-radius:8px;color:#fff;font-size:1em;" required>
+      <textarea id="taskNotes" placeholder="ملاحظات (اختياري)" rows="3" style="width:100%;padding:10px;margin-bottom:15px;background:#16213e;border:2px solid #4ecca3;border-radius:8px;color:#fff;font-size:1em;"></textarea>
+      <div style="display:flex;gap:10px;justify-content:center;margin-top:15px;flex-wrap:wrap;">
+        <button onclick="closeModal()" style="padding:10px 20px;border-radius:8px;font-weight:600;cursor:pointer;border:none;font-size:0.95em;flex:1;min-width:100px;background:#e94560;color:white;">إلغاء</button>
+        <button onclick="addTask()" style="padding:10px 20px;border-radius:8px;font-weight:600;cursor:pointer;border:none;font-size:0.95em;flex:1;min-width:100px;background:#4ecca3;color:#1a1a2e;">إضافة</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- رسالة التأكيد -->
+  <div class="toast" id="toast">تم الحفظ بنجاح!</div>
+
+  <script>
+    // تهيئة التاريخ
+    function updateDate() {
+      const now = new Date();
+      const options = { 
+        weekday: 'long', 
+        year: 'numeric', 
+        month: 'long', 
+        day: 'numeric'
+      };
+      document.getElementById('currentDate').textContent = now.toLocaleDateString('ar-EG', options);
+    }
+
+    // نظام التخزين
+    const STORAGE_KEY = 'weekly_tasks_v2';
+    const NOTES_KEY = 'general_notes_v2';
+    
+    // تحميل البيانات
+    function loadTasks() {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      if (saved) {
+        const tasks = JSON.parse(saved);
+        Object.keys(tasks).forEach(day => {
+          const container = document.getElementById(`${day}Tasks`);
+          if (container) {
+            container.innerHTML = '';
+            tasks[day].forEach(task => {
+              addTaskToDOM(day, task.id, task.name, task.notes, task.completed);
+            });
+          }
+        });
+      }
+      
+      // تحميل الملاحظات العامة
+      const savedNotes = localStorage.getItem(NOTES_KEY);
+      if (savedNotes) {
+        document.getElementById('generalNotes').value = savedNotes;
+      }
+      
+      updateStats();
+    }
+
+    // حفظ البيانات
+    function saveTasks() {
+      const tasks = {
+        sunday: [],
+        monday: [],
+        tuesday: [],
+        wednesday: [],
+        thursday: [],
+        friday: [],
+        saturday: []
+      };
+      
+      Object.keys(tasks).forEach(day => {
+        const container = document.getElementById(`${day}Tasks`);
+        const taskItems = container.querySelectorAll('.task-item');
+        
+        taskItems.forEach(item => {
+          const id = item.id;
+          const name = item.querySelector('.task-title').textContent;
+          const notes = item.querySelector('.task-notes').value || '';
+          const completed = item.classList.contains('completed');
+          
+          tasks[day].push({ id, name, notes, completed });
+        });
+      });
+      
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(tasks));
+      
+      // حفظ الملاحظات العامة
+      localStorage.setItem(NOTES_KEY, document.getElementById('generalNotes').value);
+      
+      showToast();
+    }
+
+    // إضافة مهمة للواجهة
+    function addTaskToDOM(day, id, name, notes = '', completed = false) {
+      const container = document.getElementById(`${day}Tasks`);
+      const taskItem = document.createElement('div');
+      taskItem.className = `task-item ${completed ? 'completed' : ''}`;
+      taskItem.id = id;
+      taskItem.innerHTML = `
+        <div class="task-checkbox ${completed ? 'checked' : ''}" onclick="toggleCheck('${id}')"></div>
+        <div class="task-content">
+          <div class="task-title">${escapeHtml(name)}</div>
+          <textarea class="task-notes" placeholder="أضف ملاحظاتك هنا...">${escapeHtml(notes)}</textarea>
+        </div>
+      `;
+      container.appendChild(taskItem);
+      
+      // إضافة حدث الحفظ عند تغيير الملاحظات
+      const notesArea = taskItem.querySelector('.task-notes');
+      notesArea.addEventListener('blur', saveTasks);
+      notesArea.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' && e.ctrlKey) {
+          saveTasks();
+        }
+      });
+    }
+
+    // فتح نافذة الإضافة
+    function openAddTaskModal(day) {
+      document.getElementById('selectedDay').value = day;
+      const daySelect = document.getElementById('daySelect');
+      
+      if (day === 'quick') {
+        daySelect.style.display = 'block';
+        daySelect.value = 'sunday';
+      } else {
+        daySelect.style.display = 'none';
+        daySelect.value = day;
+      }
+      
+      document.getElementById('taskName').value = '';
+      document.getElementById('taskNotes').value = '';
+      document.getElementById('addTaskModal').style.display = 'flex';
+      document.getElementById('taskName').focus();
+      
+      // منع تمرير الصفحة الرئيسية
+      document.body.style.overflow = 'hidden';
+    }
+
+    // إغلاق النافذة
+    function closeModal() {
+      document.getElementById('addTaskModal').style.display = 'none';
+      document.body.style.overflow = 'auto';
+    }
+
+    // إضافة مهمة جديدة
+    function addTask() {
+      let day = document.getElementById('selectedDay').value;
+      const taskName = document.getElementById('taskName').value.trim();
+      const taskNotes = document.getElementById('taskNotes').value.trim();
+      
+      if (day === 'quick') {
+        day = document.getElementById('daySelect').value;
+      }
+      
+      if (!taskName) {
+        alert('⚠️ يرجى إدخال اسم المهمة');
+        return;
+      }
+
+      const taskId = `task_${Date.now()}`;
+      addTaskToDOM(day, taskId, taskName, taskNotes, false);
+      closeModal();
+      saveTasks();
+      
+      // التمرير إلى المهمة الجديدة
+      const taskElement = document.getElementById(taskId);
+      if (taskElement) {
+        taskElement.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      }
+    }
+
+    // تبديل حالة الإنجاز
+    function toggleCheck(taskId) {
+      const taskItem = document.getElementById(taskId);
+      const checkbox = taskItem.querySelector('.task-checkbox');
+      
+      checkbox.classList.toggle('checked');
+      taskItem.classList.toggle('completed');
+      
+      saveTasks();
+      updateStats();
+    }
+
+    // تحديث الإحصائيات
+    function updateStats() {
+      const allTasks = document.querySelectorAll('.task-item');
+      const completedTasks = document.querySelectorAll('.task-item.completed');
+      
+      const total = allTasks.length;
+      const completed = completedTasks.length;
+      const pending = total - completed;
+      const rate = total > 0 ? Math.round((completed / total) * 100) : 0;
+
+      document.getElementById('totalTasks').textContent = total;
+      document.getElementById('completedTasks').textContent = completed;
+      document.getElementById('pendingTasks').textContent = pending;
+      document.getElementById('completionRate').textContent = rate + '%';
+    }
+
+    // عرض رسالة تأكيد
+    function showToast() {
+      const toast = document.getElementById('toast');
+      toast.classList.add('show');
+      setTimeout(() => {
+        toast.classList.remove('show');
+      }, 2000);
+    }
+
+    // حماية من XSS
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    // أحداث الإغلاق
+    window.onclick = function(event) {
+      const modal = document.getElementById('addTaskModal');
+      if (event.target == modal) {
+        closeModal();
+      }
+    };
+
+    document.addEventListener('keydown', function(event) {
+      if (event.key === 'Escape') {
+        closeModal();
+      }
+    });
+
+    // حفظ الملاحظات العامة عند الخروج
+    window.addEventListener('beforeunload', saveTasks);
+
+    // تهيئة الصفحة
+    document.addEventListener('DOMContentLoaded', () => {
+      updateDate();
+      loadTasks();
+      
+      // حدث حفظ الملاحظات العامة
+      document.getElementById('generalNotes').addEventListener('blur', saveTasks);
+      
+      // إضافة مهمة تجريبية إذا كانت المهام فارغة
+      const saved = localStorage.getItem(STORAGE_KEY);
+      if (!saved) {
+        setTimeout(() => {
+          addTaskToDOM('sunday', 'welcome_task', '🎯 جرب إضافة مهامك الأولى!', 'اضغط على زر ➕ لإضافة مهامك الأسبوعية', false);
+          saveTasks();
+        }, 300);
+      }
+    });
+  </script>
+</body>
+</html>
