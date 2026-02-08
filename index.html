@@ -304,6 +304,34 @@
       width: 100%;
       line-height: 1.4;
     }
+
+    .task-delete-btn {
+      position: absolute;
+      top: 5px;
+      left: 5px;
+      background: var(--accent);
+      color: white;
+      border: none;
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      cursor: pointer;
+      font-size: 0.8em;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s ease;
+      opacity: 0;
+    }
+
+    .task-item:hover .task-delete-btn {
+      opacity: 1;
+    }
+
+    .task-delete-btn:hover {
+      background: #c1142f;
+      transform: scale(1.15);
+    }
       transform: rotate(360deg);
     }
 
@@ -487,6 +515,11 @@
     .toast.show {
       transform: translateX(-50%) translateY(0);
       opacity: 1;
+    }
+
+    @keyframes fadeOut {
+      from { opacity: 1; transform: translateX(0); }
+      to { opacity: 0; transform: translateX(100%); }
     }
 
     @media (min-width: 769px) {
@@ -746,6 +779,21 @@
       showToast();
     }
 
+    // حذف مهمة
+    function deleteTask(taskId) {
+      const taskItem = document.getElementById(taskId);
+      const taskName = taskItem.querySelector('.task-title').textContent.replace(/⏰|🔔|🔴|<span.*<\/span>/g, '').trim();
+      
+      if (confirm(`هل أنت متأكد من حذف المهمة:\n"${taskName}"?`)) {
+        taskItem.style.animation = 'fadeOut 0.3s ease';
+        setTimeout(() => {
+          taskItem.remove();
+          saveTasks();
+          showToast('تم حذف المهمة ✂️');
+        }, 300);
+      }
+    }
+
     // إضافة مهمة للواجهة
     function addTaskToDOM(day, id, name, notes = '', completed = false, hour = '', minute = '') {
       const container = document.getElementById(`${day}Tasks`);
@@ -756,6 +804,7 @@
       const hasAlarmTime = hour !== '' && minute !== '';
       
       taskItem.innerHTML = `
+        <button class="task-delete-btn" onclick="deleteTask('${id}')" title="حذف المهمة">✕</button>
         <div class="task-checkbox ${completed ? 'checked' : ''}" onclick="toggleCheck('${id}')"></div>
         <div class="task-content">
           <div class="task-title">${escapeHtml(name)}${hasAlarmTime ? '<span class="alarm-indicator"></span>' : ''}</div>
@@ -878,30 +927,55 @@
 
     // تشغيل صوت المنبه
     function playAlarmSound() {
-      const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-      const oscillator = audioContext.createOscillator();
-      const gainNode = audioContext.createGain();
-      
-      oscillator.connect(gainNode);
-      gainNode.connect(audioContext.destination);
-      
-      oscillator.frequency.value = 800;
-      oscillator.type = 'sine';
-      gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
-      gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5);
-      
-      oscillator.start(audioContext.currentTime);
-      oscillator.stop(audioContext.currentTime + 0.5);
+      try {
+        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        
+        // نمط متكرر من النبضات لمدة 3 ثوان
+        for (let i = 0; i < 6; i++) {
+          const oscillator = audioContext.createOscillator();
+          const gainNode = audioContext.createGain();
+          
+          oscillator.connect(gainNode);
+          gainNode.connect(audioContext.destination);
+          
+          oscillator.frequency.value = 800 + (i % 2) * 200; // تناوب بين ترددات
+          oscillator.type = 'sine';
+          
+          const startTime = audioContext.currentTime + (i * 0.3);
+          gainNode.gain.setValueAtTime(0.4, startTime);
+          gainNode.gain.exponentialRampToValueAtTime(0.01, startTime + 0.25);
+          
+          oscillator.start(startTime);
+          oscillator.stop(startTime + 0.25);
+        }
+      } catch (e) {
+        console.log('تعذر تشغيل المنبه:', e);
+      }
     }
 
     // عرض إشعار المنبه
     function showAlarmNotification(taskName) {
+      // تشغيل صوت المنبه مباشرة
+      playAlarmSound();
+      
+      // عرض الإشعار
       const toast = document.getElementById('toast');
       toast.innerHTML = `🔔 حان وقت: ${escapeHtml(taskName)}`;
       toast.classList.add('show');
+      
+      // محاولة عرض إشعار النظام (للموبايل وأجهزة سطح المكتب)
+      if ('Notification' in window && Notification.permission === 'granted') {
+        new Notification('📅 مخططي - منبه المهام', {
+          body: `حان وقت: ${taskName}`,
+          icon: '📅',
+          tag: 'alarm-' + Date.now(),
+          requireInteraction: true
+        });
+      }
+      
       setTimeout(() => {
         toast.classList.remove('show');
-      }, 4000);
+      }, 5000);
     }
 
     // تحديث الإحصائيات
@@ -921,9 +995,9 @@
     }
 
     // عرض رسالة تأكيد
-    function showToast() {
+    function showToast(message = 'تم الحفظ بنجاح! ✅') {
       const toast = document.getElementById('toast');
-      toast.innerHTML = 'تم الحفظ بنجاح! ✅';
+      toast.innerHTML = message;
       toast.classList.add('show');
       setTimeout(() => {
         toast.classList.remove('show');
@@ -972,8 +1046,15 @@
         }, 300);
       }
       
+      // طلب إذن للإشعارات (للموبايل وأجهزة سطح المكتب)
+      if ('Notification' in window && Notification.permission === 'default') {
+        Notification.requestPermission();
+      }
+      
       // التحقق من المنبهات كل دقيقة
       setInterval(checkAlarms, 60000);
+      // تحقق فوري عند التحميل
+      checkAlarms();
     });
   </script>
 </body>
